@@ -7,6 +7,12 @@
         <element id="directory" name="classes">
           <element id="module-output" name="currency-exchange" />
         </element>
+        <element id="directory" name="lib">
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.22" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.22.2" />
+          <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.22.2" />
+          <element id="library" level="project" name="Maven: org.xerial:sqlite-jdbc:3.53.2.1" />
+        </element>
       </element>
     </root>
   </artifact>
