@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Currency;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @WebServlet({"/currencies", "/currency/*"})
 public class CurrencyExchangeServlet extends HttpServlet {
@@ -27,13 +29,25 @@ public class CurrencyExchangeServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String servletPath = req.getServletPath();
 
-        resp.setContentType("text/html");
-
         if (servletPath.equals("/currencies")) {
-            // TODO - вернуть все валюты
-            //
 
-            ;
+
+            CurrencyDAO currencyDAO = CurrencyDAO.getInstance();
+            var currencies = currencyDAO.findAll();
+
+            List<CurrencyDTO> currencyDTOS = new ArrayList<>();
+            for (var currency : currencies) {
+                CurrencyDTO currencyDTO = new CurrencyDTO(
+                        currency.getId(),
+                        currency.getCode(),
+                        currency.getFullName(),
+                        currency.getSign());
+                currencyDTOS.add(currencyDTO);
+            }
+
+            resp.setContentType("application/json");
+            resp.setCharacterEncoding("UTF-8");
+            mapper.writeValue(resp.getWriter(), currencyDTOS);
 
         } else if (servletPath.equals("/currency")) {
             String currencyCode = req.getPathInfo().substring(1);
