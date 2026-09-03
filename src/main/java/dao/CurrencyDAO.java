@@ -1,6 +1,7 @@
 package dao;
 
 import exception.CodeAlreadyExistException;
+import exception.DatabaseException;
 import model.Currency;
 import util.ConnectionManager;
 
@@ -60,7 +61,7 @@ public class CurrencyDAO {
             if (e.getErrorCode() == 2067 || e.getMessage().contains("UNIQUE")) {
                 throw new CodeAlreadyExistException(currency.getCode());
             } else {
-                throw new RuntimeException(e);
+                throw new DatabaseException();
             }
         }
     }
@@ -82,7 +83,7 @@ public class CurrencyDAO {
             }
             return Optional.ofNullable(currency);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new DatabaseException();
         }
     }
 
@@ -101,7 +102,7 @@ public class CurrencyDAO {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new DatabaseException();
         }
         return currencies;
     }
