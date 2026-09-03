@@ -1,5 +1,6 @@
 package dao;
 
+import exception.CodeAlreadyExistException;
 import model.Currency;
 import util.ConnectionManager;
 
@@ -10,6 +11,11 @@ import java.util.Optional;
 
 public class CurrencyDAO {
     private static final CurrencyDAO INSTANCE = new CurrencyDAO();
+
+    private static final String SAVE_SQL = """
+            INSERT INTO Currencies (Code, FullName, Sign)
+            VALUES (?, ?, ?)
+            """;
 
     private static final String FIND_BY_CODE_SQL = """
             SELECT id,
@@ -33,6 +39,30 @@ public class CurrencyDAO {
 
     public static CurrencyDAO getInstance() {
         return INSTANCE;
+    }
+
+    public Currency save(Currency currency) {
+        try (var connection = ConnectionManager.open()) {
+            var preparedStatement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, currency.getCode());
+            preparedStatement.setString(2, currency.getFullName());
+            preparedStatement.setString(3, currency.getSign());
+            preparedStatement.executeUpdate();
+
+            var generatedKeys = preparedStatement.getGeneratedKeys();
+
+            if (generatedKeys.next()) {
+                currency.setId(generatedKeys.getLong(1));
+            }
+
+            return currency;
+        } catch (SQLException e) {
+            if (e.getErrorCode() == 2067 || e.getMessage().contains("UNIQUE")) {
+                throw new CodeAlreadyExistException(currency.getCode());
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public Optional<Currency> findByCode(String code) {

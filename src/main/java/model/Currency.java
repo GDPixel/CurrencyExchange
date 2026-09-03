@@ -13,6 +13,10 @@ public class Currency {
         this.sign = sign;
     }
 
+    public Currency() {
+
+    }
+
     public Long getId() {
         return id;
     }
