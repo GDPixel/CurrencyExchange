@@ -3,6 +3,7 @@ package org.example.servlet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dao.CurrencyDAO;
 import dto.CurrencyDTO;
+import exception.CodeAlreadyExistException;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -74,8 +75,39 @@ public class CurrencyExchangeServlet extends HttpServlet {
             // writer.write(404);
             ;
         }
+    }
 
-        super.doGet(req, resp);
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        String name = req.getParameter("name");
+        String code = req.getParameter("code");
+        String sign = req.getParameter("sign");
+
+        Currency currency = new Currency();
+        currency.setFullName(name);
+        currency.setCode(code);
+        currency.setSign(sign);
+
+
+        var currencyDAO = CurrencyDAO.getInstance();
+
+        try {
+            currency = currencyDAO.save(currency);
+            CurrencyDTO currencyDTO = new CurrencyDTO(
+                    currency.getId(),
+                    currency.getCode(),
+                    currency.getFullName(),
+                    currency.getSign());
+
+            resp.setContentType("application/json");
+            resp.setCharacterEncoding("UTF-8");
+            mapper.writeValue(resp.getWriter(), currencyDTO);
+        } catch (CodeAlreadyExistException e) {
+            //TODO 409 Code is already present
+            resp.getWriter().write(e.getMessage());
+        }
+
     }
 
     @Override
