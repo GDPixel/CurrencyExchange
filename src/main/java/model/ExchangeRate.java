@@ -1,40 +1,40 @@
 package model;
 
 public class ExchangeRate {
-    private int id;
-    private int baseCurrencyId;
-    private int targetCurrencyId;
+    private Long id;
+    private Long baseCurrencyId;
+    private Long targetCurrencyId;
     //TODO rate должен сохранять точность double не подходит
     private double rate;
 
-    public ExchangeRate(int id, int baseCurrencyId, int targetCurrencyId, double rate) {
+    public ExchangeRate(Long id, Long baseCurrencyId, Long targetCurrencyId, double rate) {
         this.id = id;
         this.baseCurrencyId = baseCurrencyId;
         this.targetCurrencyId = targetCurrencyId;
         this.rate = rate;
     }
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public int getBaseCurrencyId() {
+    public Long getBaseCurrencyId() {
         return baseCurrencyId;
     }
 
-    public void setBaseCurrencyId(int baseCurrencyId) {
+    public void setBaseCurrencyId(Long baseCurrencyId) {
         this.baseCurrencyId = baseCurrencyId;
     }
 
-    public int getTargetCurrencyId() {
+    public Long getTargetCurrencyId() {
         return targetCurrencyId;
     }
 
-    public void setTargetCurrencyId(int targetCurrencyId) {
+    public void setTargetCurrencyId(Long targetCurrencyId) {
         this.targetCurrencyId = targetCurrencyId;
     }
 
