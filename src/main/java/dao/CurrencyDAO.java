@@ -17,6 +17,14 @@ public class CurrencyDAO {
             INSERT INTO Currencies (Code, FullName, Sign)
             VALUES (?, ?, ?)
             """;
+    private static final String FIND_BY_ID_SQL = """
+            SELECT id,
+                Code,
+                FullName,
+                Sign
+            FROM Currencies
+            WHERE id = ?
+            """;
 
     private static final String FIND_BY_CODE_SQL = """
             SELECT id,
@@ -105,5 +113,25 @@ public class CurrencyDAO {
             throw new DatabaseException();
         }
         return currencies;
+    }
+
+    public Optional<Currency> findById(Long id) {
+        try (var connection = ConnectionManager.open()) {
+            var preparedStatement = connection.prepareStatement(FIND_BY_ID_SQL);
+            preparedStatement.setLong(1, id);
+            var resultSet = preparedStatement.executeQuery();
+            Currency currency = null;
+            if (resultSet.next()) {
+                currency = new Currency(
+                        resultSet.getLong("id"),
+                        resultSet.getString("Code"),
+                        resultSet.getString("fullName"),
+                        resultSet.getString("Sign")
+                );
+            }
+            return Optional.ofNullable(currency);
+        } catch (SQLException e) {
+            throw new DatabaseException();
+        }
     }
 }
