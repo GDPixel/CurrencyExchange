@@ -1,20 +1,21 @@
 package dao;
 
 import exception.DatabaseException;
-import model.Currency;
 import model.ExchangeRate;
 import util.ConnectionManager;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class ExchangeRateDAO {
     private static final ExchangeRateDAO INSTANCE = new ExchangeRateDAO();
+
+    private static final String SAVE_SQL = """
+            INSERT INTO ExchangeRates (BaseCurrencyId, TargetCurrencyId, Rate)
+            VALUES (?, ?, ?)
+            """;
 
     private static final String FIND_ALL_SQL = """
             SELECT * FROM ExchangeRates;
@@ -33,7 +34,7 @@ public class ExchangeRateDAO {
     }
 
     public List<ExchangeRate> findAll() {
-        List<ExchangeRate> exchangeRates = new ArrayList<ExchangeRate>();
+        List<ExchangeRate> exchangeRates = new ArrayList<>();
         try (var connection = ConnectionManager.open()) {
             var preparedStatement = connection.prepareStatement(FIND_ALL_SQL);
             var resultSet = preparedStatement.executeQuery();
@@ -67,6 +68,26 @@ public class ExchangeRateDAO {
                 );
             }
             return Optional.ofNullable(exchangeRate);
+        } catch (SQLException e) {
+            throw new DatabaseException();
+        }
+    }
+
+    public ExchangeRate save(ExchangeRate exchangeRate) {
+        try (var connection = ConnectionManager.open()) {
+            var preparedStatement = connection.prepareStatement(SAVE_SQL, Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setLong(1, exchangeRate.getBaseCurrencyId());
+            preparedStatement.setLong(2, exchangeRate.getTargetCurrencyId());
+            preparedStatement.setDouble(3, exchangeRate.getRate());
+            preparedStatement.executeUpdate();
+
+            var generatedKeys = preparedStatement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                exchangeRate.setId(generatedKeys.getLong(1));
+            }
+
+            return exchangeRate;
+
         } catch (SQLException e) {
             throw new DatabaseException();
         }

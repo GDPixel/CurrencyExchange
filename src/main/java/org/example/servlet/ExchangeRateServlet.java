@@ -74,4 +74,37 @@ public class ExchangeRateServlet extends HttpServlet {
 
         }
     }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String baseCurrencyCode = req.getParameter("baseCurrencyCode");
+        String targetCurrencyCode = req.getParameter("targetCurrencyCode");
+        Double rate = Double.parseDouble(req.getParameter("rate"));
+        // TODO проверить введенные данные
+        // 1. создать два объекта валют и если они не существуют в бд то исключение
+        // 2. создать exchangeRate
+        // 3. добавить его в бд
+        // 4. сформировать ДТО
+        var maybeBaseCurrency = CurrencyDAO.getInstance().findByCode(baseCurrencyCode);
+        var maybeTargetCurrency = CurrencyDAO.getInstance().findByCode(targetCurrencyCode);
+        if (maybeBaseCurrency.isPresent() && maybeTargetCurrency.isPresent()) {
+            Currency baseCurrency = maybeBaseCurrency.get();
+            Currency targetCurrency = maybeTargetCurrency.get();
+
+            ExchangeRate exchangeRate = new ExchangeRate();
+            exchangeRate.setBaseCurrencyId(baseCurrency.getId());
+            exchangeRate.setTargetCurrencyId(targetCurrency.getId());
+            exchangeRate.setRate(rate);
+
+            exchangeRate = ExchangeRateDAO.getInstance().save(exchangeRate);
+            ExchangeRateDTO exchangeRateDTO = new ExchangeRateDTO(exchangeRate.getId(),
+                    baseCurrency,
+                    targetCurrency,
+                    exchangeRate.getRate());
+            resp.setContentType("application/json");
+            resp.setCharacterEncoding("UTF-8");
+            mapper.writeValue(resp.getWriter(), exchangeRateDTO);
+        }
+
+    }
 }
