@@ -17,6 +17,14 @@ public class ExchangeRateDAO {
             VALUES (?, ?, ?)
             """;
 
+    private static final String UPDATE_SQL = """
+            UPDATE ExchangeRates
+            SET BaseCurrencyId = ?,
+                TargetCurrencyId = ?,
+                Rate = ?
+            WHERE id = ?
+            """;
+
     private static final String FIND_ALL_SQL = """
             SELECT * FROM ExchangeRates;
             """;
@@ -88,6 +96,20 @@ public class ExchangeRateDAO {
 
             return exchangeRate;
 
+        } catch (SQLException e) {
+            throw new DatabaseException();
+        }
+    }
+
+    public void update(ExchangeRate exchangeRate) {
+        try (var connection = ConnectionManager.open()) {
+            var preparedStatement = connection.prepareStatement(UPDATE_SQL);
+            preparedStatement.setLong(1, exchangeRate.getBaseCurrencyId());
+            preparedStatement.setLong(2, exchangeRate.getTargetCurrencyId());
+            preparedStatement.setDouble(3, exchangeRate.getRate());
+            preparedStatement.setLong(4, exchangeRate.getId());
+
+            preparedStatement.executeUpdate();
         } catch (SQLException e) {
             throw new DatabaseException();
         }

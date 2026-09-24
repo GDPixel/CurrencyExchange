@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import model.Currency;
 import model.ExchangeRate;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +47,7 @@ public class ExchangeRateServlet extends HttpServlet {
             resp.setCharacterEncoding("UTF-8");
             mapper.writeValue(resp.getWriter(), exchangeRateDTOS);
         } else if (servletPath.equals("/exchangeRate")) {
-            // USDRUB -> USD RUB проверить длину на 6 символов, 7 вместе с '/'
+            // TODO USDRUB -> USD RUB проверить длину на 6 символов, 7 вместе с '/'
             String baseCurrencyCode = req.getPathInfo().substring(1,4);
             String targetCurrencyCode = req.getPathInfo().substring(4,7);
             var maybeBaseCurrency = currencyDAO.findByCode(baseCurrencyCode);
@@ -79,7 +80,7 @@ public class ExchangeRateServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String baseCurrencyCode = req.getParameter("baseCurrencyCode");
         String targetCurrencyCode = req.getParameter("targetCurrencyCode");
-        Double rate = Double.parseDouble(req.getParameter("rate"));
+        double rate = Double.parseDouble(req.getParameter("rate"));
         // TODO проверить введенные данные
         // 1. создать два объекта валют и если они не существуют в бд то исключение
         // 2. создать exchangeRate
@@ -105,6 +106,45 @@ public class ExchangeRateServlet extends HttpServlet {
             resp.setCharacterEncoding("UTF-8");
             mapper.writeValue(resp.getWriter(), exchangeRateDTO);
         }
+    }
 
+    @Override
+    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        BufferedReader reader = req.getReader();
+        String body = reader.readLine();
+        // TODO проверить что это именно "rate=0.1" и не null
+        String rateValue = body.split("=")[1];
+        double rate = Double.parseDouble(rateValue);
+
+        // TODO USDRUB -> USD RUB проверить длину на 6 символов, 7 вместе с '/'
+        String baseCurrencyCode = req.getPathInfo().substring(1,4);
+        String targetCurrencyCode = req.getPathInfo().substring(4,7);
+
+        var exchangeRateDAO = ExchangeRateDAO.getInstance();
+        var currencyDAO = CurrencyDAO.getInstance();
+
+        var maybeBaseCurrency = currencyDAO.findByCode(baseCurrencyCode);
+        var maybeTargetCurrency = currencyDAO.findByCode(targetCurrencyCode);
+        if (maybeBaseCurrency.isPresent() && maybeTargetCurrency.isPresent()) {
+            Currency baseCurrency = maybeBaseCurrency.get();
+            Currency targetCurrency = maybeTargetCurrency.get();
+            var maybeExchangeRate = exchangeRateDAO.findByBaseAndTargetIds(baseCurrency.getId(), targetCurrency.getId());
+            if (maybeExchangeRate.isPresent()) {
+                ExchangeRate exchangeRate = maybeExchangeRate.get();
+
+                exchangeRate.setRate(rate);
+                exchangeRateDAO.update(exchangeRate);
+                ExchangeRateDTO exchangeRateDTO = new ExchangeRateDTO(exchangeRate.getId(),
+                        baseCurrency,
+                        targetCurrency,
+                        exchangeRate.getRate());
+                resp.setContentType("application/json");
+                resp.setCharacterEncoding("UTF-8");
+                mapper.writeValue(resp.getWriter(), exchangeRateDTO);
+            }
+        }
+
+        //TODO ловим ошибки и исключения PATCH
     }
 }
