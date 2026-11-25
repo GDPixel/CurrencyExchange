@@ -3,6 +3,7 @@ package org.example.servlet;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dao.CurrencyDAO;
 import dao.ExchangeRateDAO;
+import dto.ExchangeDTO;
 import dto.ExchangeRateDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -11,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Currency;
 import model.ExchangeRate;
+import service.ExchangeService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@WebServlet({"/exchangeRates", "/exchangeRate/*"})
+@WebServlet({"/exchangeRates", "/exchangeRate/*","/exchange"})
 public class ExchangeRateServlet extends HttpServlet {
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -48,8 +50,8 @@ public class ExchangeRateServlet extends HttpServlet {
             mapper.writeValue(resp.getWriter(), exchangeRateDTOS);
         } else if (servletPath.equals("/exchangeRate")) {
             // TODO USDRUB -> USD RUB проверить длину на 6 символов, 7 вместе с '/'
-            String baseCurrencyCode = req.getPathInfo().substring(1,4);
-            String targetCurrencyCode = req.getPathInfo().substring(4,7);
+            String baseCurrencyCode = req.getPathInfo().substring(1, 4);
+            String targetCurrencyCode = req.getPathInfo().substring(4, 7);
             var maybeBaseCurrency = currencyDAO.findByCode(baseCurrencyCode);
             var maybeTargetCurrency = currencyDAO.findByCode(targetCurrencyCode);
             if (maybeBaseCurrency.isPresent() && maybeTargetCurrency.isPresent()) {
@@ -73,6 +75,23 @@ public class ExchangeRateServlet extends HttpServlet {
                 // ошибка! одна из пар не существует либо обе..
             }
 
+        } else if (servletPath.equals("/exchange")) {
+            // 1. парсим данные
+            String baseCurrencyCode = req.getParameter("from");
+            String targetCurrencyCode = req.getParameter("to");
+            double amount = Double.parseDouble(req.getParameter("amount"));
+
+            var maybeBaseCurrency = currencyDAO.findByCode(baseCurrencyCode);
+            var maybeTargetCurrency = currencyDAO.findByCode(targetCurrencyCode);
+            if (maybeBaseCurrency.isPresent() && maybeTargetCurrency.isPresent()) {
+                Currency baseCurrency = maybeBaseCurrency.get();
+                Currency targetCurrency = maybeTargetCurrency.get();
+                ExchangeDTO exchangeDTO = ExchangeService.getInstance().exchange(baseCurrency, targetCurrency, amount);
+                resp.setContentType("application/json");
+                resp.setCharacterEncoding("UTF-8");
+                mapper.writeValue(resp.getWriter(), exchangeDTO);
+
+            }
         }
     }
 
