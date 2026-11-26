@@ -20,6 +20,7 @@ import java.util.List;
 @WebServlet({"/currencies", "/currency/*"})
 public class CurrencyServlet extends HttpServlet {
 
+    private static final CurrencyDAO currencyDAO = CurrencyDAO.getInstance();
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
@@ -28,12 +29,17 @@ public class CurrencyServlet extends HttpServlet {
     }
 
     @Override
+    public void service(HttpServletRequest  req, HttpServletResponse  resp) throws ServletException, IOException {
+        resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
+        super.service(req, resp);
+    }
+
+    @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String servletPath = req.getServletPath();
         try {
             if (servletPath.equals("/currencies")) {
-
-                CurrencyDAO currencyDAO = CurrencyDAO.getInstance();
                 var currencies = currencyDAO.findAll();
 
                 List<CurrencyDTO> currencyDTOS = new ArrayList<>();
@@ -46,21 +52,16 @@ public class CurrencyServlet extends HttpServlet {
                     currencyDTOS.add(currencyDTO);
                 }
 
-                resp.setContentType("application/json");
-                resp.setCharacterEncoding("UTF-8");
                 mapper.writeValue(resp.getWriter(), currencyDTOS);
 
             } else if (servletPath.equals("/currency")) {
                 String currencyCode = req.getPathInfo().substring(1);
                 if (currencyCode.isEmpty()) {
-                    resp.setContentType("application/json");
-                    resp.setCharacterEncoding("UTF-8");
                     resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     resp.getWriter().print("{\"message\": \"Код валюты отсутствует в адресе\"}");
                     return;
                 }
 
-                CurrencyDAO currencyDAO = CurrencyDAO.getInstance();
                 var mayBeCurrency = currencyDAO.findByCode(currencyCode);
                 if (mayBeCurrency.isPresent()) {
                     Currency currency = mayBeCurrency.get();
@@ -70,12 +71,8 @@ public class CurrencyServlet extends HttpServlet {
                             currency.getFullName(),
                             currency.getSign());
 
-                    resp.setContentType("application/json");
-                    resp.setCharacterEncoding("UTF-8");
                     mapper.writeValue(resp.getOutputStream(), currencyDTO);
                 } else {
-                    resp.setContentType("application/json");
-                    resp.setCharacterEncoding("UTF-8");
                     resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     resp.getWriter().print("{\"message\": \"Валюта не найдена\"}");
                 }
@@ -83,7 +80,6 @@ public class CurrencyServlet extends HttpServlet {
 
         } catch (DatabaseException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.setContentType("application/json");
             resp.getWriter().print("{\"message\": \"%s\"}".formatted(e.getMessage()));
         }
     }
@@ -99,8 +95,6 @@ public class CurrencyServlet extends HttpServlet {
             || name.trim().isEmpty() || code.trim().isEmpty() || sign.trim().isEmpty()) {
 
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
             resp.getWriter().print("{\"message\": \"Отсутствует нужное поле формы\"}");
             return;
         }
@@ -112,7 +106,6 @@ public class CurrencyServlet extends HttpServlet {
 
 
         try {
-            var currencyDAO = CurrencyDAO.getInstance();
             currency = currencyDAO.save(currency);
             CurrencyDTO currencyDTO = new CurrencyDTO(
                     currency.getId(),
@@ -121,17 +114,12 @@ public class CurrencyServlet extends HttpServlet {
                     currency.getSign());
 
             resp.setStatus(HttpServletResponse.SC_CREATED);
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
             mapper.writeValue(resp.getWriter(), currencyDTO);
         } catch (CodeAlreadyExistException e) {
             resp.setStatus(HttpServletResponse.SC_CONFLICT);
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
             resp.getWriter().print("{\"message\": \"%s\"}".formatted(e.getMessage()));
         } catch (DatabaseException e) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.setContentType("application/json");
             resp.getWriter().print("{\"message\": \"%s\"}".formatted(e.getMessage()));
         }
     }
