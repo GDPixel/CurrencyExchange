@@ -42,6 +42,8 @@ public class CurrencyDAO {
                  Sign
             FROM Currencies
             """;
+    private static final int SQLITE_CONSTRAINT_UNIQUE = 2067;
+    private static final String UNIQUE_CONSTRAINT_MESSAGE = "UNIQUE";
 
     private CurrencyDAO() {
     }
@@ -66,7 +68,7 @@ public class CurrencyDAO {
 
             return currency;
         } catch (SQLException e) {
-            if (e.getErrorCode() == 2067 || e.getMessage().contains("UNIQUE")) {
+            if (e.getErrorCode() == SQLITE_CONSTRAINT_UNIQUE || e.getMessage().contains(UNIQUE_CONSTRAINT_MESSAGE)) {
                 throw new CodeAlreadyExistException(currency.getCode());
             } else {
                 throw new DatabaseException();
@@ -75,21 +77,17 @@ public class CurrencyDAO {
     }
 
     public Optional<Currency> findByCode(String code) {
-
         try (var connection = ConnectionManager.open()) {
             var preparedStatement = connection.prepareStatement(FIND_BY_CODE_SQL);
             preparedStatement.setString(1, code);
             var resultSet = preparedStatement.executeQuery();
-            Currency currency = null;
+
             if (resultSet.next()) {
-                currency = new Currency(
-                        resultSet.getLong("id"),
-                        resultSet.getString("Code"),
-                        resultSet.getString("fullName"),
-                        resultSet.getString("Sign")
-                );
+                return Optional.of(builtCurrency(resultSet));
+            } else {
+                return Optional.empty();
             }
-            return Optional.ofNullable(currency);
+
         } catch (SQLException e) {
             throw new DatabaseException();
         }
@@ -101,12 +99,7 @@ public class CurrencyDAO {
             var preparedStatement = connection.prepareStatement(FIND_ALL_SQL);
             var resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                Currency currency = new Currency(
-                        resultSet.getLong("id"),
-                        resultSet.getString("Code"),
-                        resultSet.getString("fullName"),
-                        resultSet.getString("Sign"));
-                currencies.add(currency);
+                currencies.add(builtCurrency(resultSet));
             }
 
         } catch (SQLException e) {
@@ -120,18 +113,22 @@ public class CurrencyDAO {
             var preparedStatement = connection.prepareStatement(FIND_BY_ID_SQL);
             preparedStatement.setLong(1, id);
             var resultSet = preparedStatement.executeQuery();
-            Currency currency = null;
             if (resultSet.next()) {
-                currency = new Currency(
-                        resultSet.getLong("id"),
-                        resultSet.getString("Code"),
-                        resultSet.getString("fullName"),
-                        resultSet.getString("Sign")
-                );
+                return Optional.of(builtCurrency(resultSet));
+            } else {
+                return Optional.empty();
             }
-            return Optional.ofNullable(currency);
         } catch (SQLException e) {
             throw new DatabaseException();
         }
+    }
+
+    private Currency builtCurrency(ResultSet resultSet) throws SQLException {
+        return new Currency(
+                resultSet.getLong("id"),
+                resultSet.getString("Code"),
+                resultSet.getString("fullName"),
+                resultSet.getString("Sign")
+        );
     }
 }

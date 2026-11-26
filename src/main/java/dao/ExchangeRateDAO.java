@@ -47,11 +47,7 @@ public class ExchangeRateDAO {
             var preparedStatement = connection.prepareStatement(FIND_ALL_SQL);
             var resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                ExchangeRate exchangeRate = new ExchangeRate(resultSet.getLong("id"),
-                        resultSet.getLong("BaseCurrencyId"),
-                        resultSet.getLong("TargetCurrencyId"),
-                        resultSet.getDouble("Rate"));
-                exchangeRates.add(exchangeRate);
+                exchangeRates.add(builtExchangeRate(resultSet));
             }
 
         } catch (SQLException e) {
@@ -66,16 +62,13 @@ public class ExchangeRateDAO {
             preparedStatement.setLong(1, baseCurrencyId);
             preparedStatement.setLong(2, targetCurrencyId);
             var resultSet = preparedStatement.executeQuery();
-            ExchangeRate exchangeRate = null;
+
             if (resultSet.next()) {
-                exchangeRate = new ExchangeRate(
-                        resultSet.getLong("id"),
-                        resultSet.getLong("BaseCurrencyId"),
-                        resultSet.getLong("TargetCurrencyId"),
-                        resultSet.getDouble("Rate")
-                );
+                return Optional.of(builtExchangeRate(resultSet));
+            } else {
+                return Optional.empty();
             }
-            return Optional.ofNullable(exchangeRate);
+
         } catch (SQLException e) {
             throw new DatabaseException();
         }
@@ -113,5 +106,12 @@ public class ExchangeRateDAO {
         } catch (SQLException e) {
             throw new DatabaseException();
         }
+    }
+
+    private ExchangeRate builtExchangeRate(ResultSet resultSet) throws SQLException {
+        return new ExchangeRate(resultSet.getLong("id"),
+                resultSet.getLong("BaseCurrencyId"),
+                resultSet.getLong("TargetCurrencyId"),
+                resultSet.getDouble("Rate"));
     }
 }
