@@ -5,6 +5,7 @@ import dto.CurrencyDTO;
 import exception.CodeAlreadyExistException;
 import exception.CurrencyNotFoundException;
 import exception.DatabaseException;
+import exception.WrongInputException;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import service.CurrencyService;
+import util.ValidationUtil;
 
 import java.io.IOException;
 import java.util.Map;
@@ -43,14 +45,17 @@ public class CurrencyServlet extends HttpServlet {
                 sendJson(resp, HttpServletResponse.SC_OK, currencyDTOs);
             } else if (servletPath.equals("/currency")) {
                 String currencyCode = req.getPathInfo().substring(1);
-                if (currencyCode.isEmpty()) {
-                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Код валюты отсутствует в адресе");
-                    return;
-                }
+                ValidationUtil.validateCurrencyCode(currencyCode);
+//                if (ValidationUtil.validateCurrencyCode(currencyCode)) {
+//                    sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Код валюты указан не верно");
+//                    return;
+//                }
 
                 var currencyDTO = currencyService.getByCode(currencyCode);
                 sendJson(resp, HttpServletResponse.SC_OK, currencyDTO);
             }
+        } catch (WrongInputException e) {
+            sendError(resp, HttpServletResponse.SC_BAD_REQUEST, "Код валюты указан не верно");
         } catch (CurrencyNotFoundException e) {
             sendError(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         } catch (DatabaseException e) {
