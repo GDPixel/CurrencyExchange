@@ -42,6 +42,18 @@ public class CurrencyService {
                 currency.getSign());
     }
 
+    public CurrencyDTO create(String code, String name, String sign) {
+        Currency currency = new Currency();
+        currency.setFullName(name);
+        currency.setCode(code);
+        currency.setSign(sign);
+        currency = currencyDAO.save(currency);
+        return new CurrencyDTO(
+                currency.getId(),
+                currency.getCode(),
+                currency.getFullName(),
+                currency.getSign());
+    }
 
     public static CurrencyService getInstance() {
         return INSTANCE;

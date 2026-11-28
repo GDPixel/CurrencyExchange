@@ -1,7 +1,6 @@
 package org.example.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dao.CurrencyDAO;
 import dto.CurrencyDTO;
 import exception.CodeAlreadyExistException;
 import exception.CurrencyNotFoundException;
@@ -12,7 +11,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import model.Currency;
 import service.CurrencyService;
 
 import java.io.IOException;
@@ -21,7 +19,6 @@ import java.util.Map;
 @WebServlet({"/currencies", "/currency/*"})
 public class CurrencyServlet extends HttpServlet {
 
-    private static final CurrencyDAO currencyDAO = CurrencyDAO.getInstance();
     private static final CurrencyService currencyService = CurrencyService.getInstance();
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -44,7 +41,6 @@ public class CurrencyServlet extends HttpServlet {
             if (servletPath.equals("/currencies")) {
                 var currencyDTOs = currencyService.getAll();
                 sendJson(resp, HttpServletResponse.SC_OK, currencyDTOs);
-
             } else if (servletPath.equals("/currency")) {
                 String currencyCode = req.getPathInfo().substring(1);
                 if (currencyCode.isEmpty()) {
@@ -76,19 +72,8 @@ public class CurrencyServlet extends HttpServlet {
             return;
         }
 
-        Currency currency = new Currency();
-        currency.setFullName(name);
-        currency.setCode(code);
-        currency.setSign(sign);
-
-
         try {
-            currency = currencyDAO.save(currency);
-            CurrencyDTO currencyDTO = new CurrencyDTO(
-                    currency.getId(),
-                    currency.getCode(),
-                    currency.getFullName(),
-                    currency.getSign());
+            CurrencyDTO currencyDTO = currencyService.create(code, name, sign);
             sendJson(resp, HttpServletResponse.SC_CREATED, currencyDTO);
 
         } catch (CodeAlreadyExistException e) {
