@@ -13,25 +13,25 @@ public class ExchangeRateDAO {
     private static final ExchangeRateDAO INSTANCE = new ExchangeRateDAO();
 
     private static final String SAVE_SQL = """
-            INSERT INTO ExchangeRates (BaseCurrencyId, TargetCurrencyId, Rate)
+            INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate)
             VALUES (?, ?, ?)
             """;
 
     private static final String UPDATE_SQL = """
-            UPDATE ExchangeRates
-            SET BaseCurrencyId = ?,
-                TargetCurrencyId = ?,
-                Rate = ?
+            UPDATE exchange_rates
+            SET base_currency_id = ?,
+                target_currency_id = ?,
+                rate = ?
             WHERE id = ?
             """;
 
     private static final String FIND_ALL_SQL = """
-            SELECT * FROM ExchangeRates;
+            SELECT * FROM exchange_rates;
             """;
 
     private static final String FIND_BY_BASE_AND_TARGET_IDS = """
-            SELECT * FROM ExchangeRates
-            WHERE BaseCurrencyId = ? AND TargetCurrencyId = ?
+            SELECT * FROM exchange_rates
+            WHERE base_currency_id = ? AND target_currency_id = ?
             """;
 
     private ExchangeRateDAO() {
@@ -110,8 +110,8 @@ public class ExchangeRateDAO {
 
     private ExchangeRate builtExchangeRate(ResultSet resultSet) throws SQLException {
         return new ExchangeRate(resultSet.getLong("id"),
-                resultSet.getLong("BaseCurrencyId"),
-                resultSet.getLong("TargetCurrencyId"),
-                resultSet.getDouble("Rate"));
+                resultSet.getLong("base_currency_id"),
+                resultSet.getLong("target_currency_id"),
+                resultSet.getDouble("rate"));
     }
 }

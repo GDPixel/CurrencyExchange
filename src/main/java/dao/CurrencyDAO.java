@@ -14,33 +14,33 @@ public class CurrencyDAO {
     private static final CurrencyDAO INSTANCE = new CurrencyDAO();
 
     private static final String SAVE_SQL = """
-            INSERT INTO Currencies (Code, FullName, Sign)
+            INSERT INTO currencies (code, full_name, sign)
             VALUES (?, ?, ?)
             """;
     private static final String FIND_BY_ID_SQL = """
             SELECT id,
-                Code,
-                FullName,
-                Sign
-            FROM Currencies
+                code,
+                full_name,
+                sign
+            FROM currencies
             WHERE id = ?
             """;
 
     private static final String FIND_BY_CODE_SQL = """
             SELECT id,
-                Code,
-                FullName,
-                Sign
-            FROM Currencies
-            WHERE Code = ?
+                code,
+                full_name,
+                sign
+            FROM currencies
+            WHERE code = ?
             """;
 
     private static final String FIND_ALL_SQL = """
             SELECT id,
-                 Code,
-                 FullName,
-                 Sign
-            FROM Currencies
+                 code,
+                 full_name,
+                 sign
+            FROM currencies
             """;
     private static final int SQLITE_CONSTRAINT_UNIQUE = 2067;
     private static final String UNIQUE_CONSTRAINT_MESSAGE = "UNIQUE";
@@ -126,9 +126,9 @@ public class CurrencyDAO {
     private Currency builtCurrency(ResultSet resultSet) throws SQLException {
         return new Currency(
                 resultSet.getLong("id"),
-                resultSet.getString("Code"),
-                resultSet.getString("fullName"),
-                resultSet.getString("Sign")
+                resultSet.getString("code"),
+                resultSet.getString("full_name"),
+                resultSet.getString("sign")
         );
     }
 }
